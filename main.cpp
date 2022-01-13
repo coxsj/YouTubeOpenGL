@@ -68,7 +68,7 @@ int main()
 	glCompileShader(vertexShader);
 
 	//Do same for fragmentShader as for vertexShader
-	GLuint fragmentShader = glad_glCreateShader(GL_VERTEX_SHADER);
+	GLuint fragmentShader = glad_glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL); //Second parm indicates 1 string for the source
 	glCompileShader(fragmentShader);
 
