@@ -29,14 +29,6 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLfloat vertices[] =
-	{
-		-0.5f,	-0.5f * float(sqrt(3)) / 3, 0.0f,
-		0.5f,	-0.5f * float(sqrt(3)) / 3, 0.0f,
-		0.0f,	0.5f * float(sqrt(3)) * 2 / 3,	0.0f
-
-	};
-
 	//Create a GLFWwindow object of 800 x 800 pixels naming it "YoutubeOpenGL"
 	GLFWwindow* window = glfwCreateWindow(800, 800, "YoutubeOpenGL", NULL, NULL);
 
@@ -85,16 +77,36 @@ int main()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
+	GLfloat vertices[] =
+	{
+		-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower left corner
+		0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // Lower right corner
+		0.0f, 0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // Upper corner
+		-0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner left
+		0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, // Inner right
+		0.0f, -0.5f * float(sqrt(3)) / 3, 0.0f // Inner down
+	};
+
+	GLuint indices[] =
+	{
+		0,3,5,	//Lower left triangle
+		3,2,4,	//Lower right triangle
+		5,4,1	// Upper triangle
+	};
+
+
 	//In order to transfer vertex info between the CPU and the GPU, we must create a vertext buffer object
 	//(vbo is typically an array of references)
 	//Also must create a vertex array object. VAO is used by OpenGL to quickly switch between VBOs.
 	//VAO must be generated BEFORE the VBO
 	GLuint VAO, VBO;		//Reference to the vertex array object and the vertex buffer object
-
+	//Create an element array buffer reference for the indices
+	GLuint EBO;	
 
 	//Generate VAO and VBO with only one object in each
 	glGenVertexArrays(1, &VAO); //Must be generated before the VBO
 	glGenBuffers(1, &VBO); //I beleive this function creates a general purpose buffer
+	glGenBuffers(1, &EBO);
 
 	//Bind the VAO so we can work with is
 	glBindVertexArray(VAO);
@@ -104,6 +116,11 @@ int main()
 
 	//Transfer data to the buffer
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	//Make the element array buffer holding the vertices current and specify its type
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	//Transfer indices data to the buffer
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//Configure VAO so OpenGL knows how to read the VBO
 	//We do this using attribute pointers
@@ -118,7 +135,7 @@ int main()
 	//Order is very important here. Note the "debinding" of VAO occurs AFTER the debinding of vbo
 	//This is the opposite of the order that matters when generating these objects
 	glBindVertexArray(0);  //i.e. binds no buffer
-
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);	//Tell OpenGL we are no longer working on indices buffer
 
 	//Specify the background  color. This prepares open GL to do the clear on the back buffer.
 	glClearColor(0.07f, 0.13f, 0.17, 1.0f); 
@@ -143,7 +160,7 @@ int main()
 		//Bind the VAO so OpenGL knows to use this one
 		//Not strictly needed as we only have one object but it is good practice so OpenGL knows which vao to use
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 		//Now that we've drawn the shapes, swap the buffers
 		glfwSwapBuffers(window);
 
@@ -155,6 +172,7 @@ int main()
 	//Delete objects created in this routine
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 	glDeleteProgram(shaderProgram);
 
 	glfwTerminate();
